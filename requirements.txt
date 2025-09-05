@@ -29,6 +29,8 @@ django-cloudinary-storage==0.3.0
 
 django-cors-headers==4.3.1
 
+gunicorn==21.2.0
+
 # Notes
 # - This file lists packages directly imported/used by the backend source code
 #   and referenced in settings.py. Development/test-only packages (pytest, etc.)
