@@ -1,0 +1,37 @@
+# Core framework
+Django==5.2.4
+
+# API
+djangorestframework==3.16.0
+djangorestframework-simplejwt==5.3.0
+
+# Configuration / environment
+python-decouple==3.8
+python-dotenv==1.0.0
+dj-database-url==3.0.1
+
+# Database driver (runtime)
+psycopg2-binary==2.9.10
+
+# Media uploads (ImageField)
+Pillow==11.0.0
+
+# Filtrage avancé pour DRF
+django-filter==24.2
+
+# Sécurité : limitation des tentatives de login
+django-axes==6.0.0
+
+# Stockage Cloudinary
+cloudinary==1.39.0
+django-cloudinary-storage==0.3.0
+
+
+django-cors-headers==4.3.1
+
+# Notes
+# - This file lists packages directly imported/used by the backend source code
+#   and referenced in settings.py. Development/test-only packages (pytest, etc.)
+#   and packages that were present in the virtual environment but not imported
+#   by the project source have been removed. Add them back to a separate
+#   requirements-dev.txt if needed.
