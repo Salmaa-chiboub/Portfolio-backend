@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'cloudinary',
     # API / auth
     'rest_framework',
+    'django_filters',
     'core',
     'skills',
     'projects',
@@ -127,8 +128,8 @@ SIMPLE_JWT = {
 # Email configuration (read from .env)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@votredomaine.com')
 SERVER_EMAIL = DEFAULT_FROM_EMAIL  # Pour les erreurs d'administration
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_BACKEND = config('EMAIL_BACKEND', default=None)
+EMAIL_HOST = config('EMAIL_HOST', default=None)
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
@@ -137,13 +138,12 @@ EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_TIMEOUT = 30  # secondes
 EMAIL_SUBJECT_PREFIX = '[Portfolio] '  # Préfixe pour les sujets d'emails
 
-# If EMAIL_HOST is configured but EMAIL_BACKEND not explicitly set, use SMTP
-if not EMAIL_BACKEND and EMAIL_HOST:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-# Fallback to console backend if nothing configured (safe for dev)
+# Determine backend: explicit > SMTP if host provided > console
 if not EMAIL_BACKEND:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    if EMAIL_HOST:
+        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    else:
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 # Password validation
