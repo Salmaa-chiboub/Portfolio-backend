@@ -61,7 +61,12 @@ class ForgotPasswordSerializer(serializers.Serializer):
         base_url = settings.FRONTEND_URL
         reset_link = f"{base_url}/reset-password/{uid}/{token}/"
 
-        send_password_reset_email(user, reset_link)
+        
+        try:
+            send_password_reset_email(user, reset_link)
+        except Exception as e:
+            print(f"[ForgotPassword] Erreur email: {e}")  # Rails va afficher dans logs
+            raise serializers.ValidationError("Impossible d'envoyer l'email")
 
 
 # ------------------ Reset Password (fusionné) ------------------ #
@@ -97,7 +102,12 @@ class ResetPasswordSerializer(serializers.Serializer):
         base_url = settings.FRONTEND_URL
         login_link = f"{base_url}/login/"
 
-        send_password_reset_confirmation_email(user, login_link)
+        s
+        try:
+            send_password_reset_confirmation_email(user, login_link)
+        except Exception as e:
+            print(f"[ForgotPassword] Erreur email: {e}")  # Rails va afficher dans logs
+            raise serializers.ValidationError("Impossible d'envoyer l'email")
         return user
 
 
