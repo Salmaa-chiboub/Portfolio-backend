@@ -102,7 +102,7 @@ class ResetPasswordSerializer(serializers.Serializer):
         base_url = settings.FRONTEND_URL
         login_link = f"{base_url}/login/"
 
-        s
+    
         try:
             send_password_reset_confirmation_email(user, login_link)
         except Exception as e:
