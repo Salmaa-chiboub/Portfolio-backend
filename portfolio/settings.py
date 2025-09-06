@@ -256,3 +256,6 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Note: You can toggle the above behavior via environment variables in production
+
+
+FRONTEND_URL=config("FRONTEND_URL", default="http://127.0.0.1:8080").rstrip("/")
