@@ -52,7 +52,7 @@ class ExperienceViewSet(viewsets.ModelViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=True, methods=['put', 'patch'], url_path='links/(?P<link_id>\d+)',
+    @action(detail=True, methods=['put', 'patch'], url_path=r'links/(?P<link_id>\\d+)',
             permission_classes=[permissions.IsAuthenticated])
     def update_link(self, request, pk=None, link_id=None):
         experience = self.get_object()
@@ -63,7 +63,7 @@ class ExperienceViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['delete'], url_path='links/(?P<link_id>\d+)', 
+    @action(detail=True, methods=['delete'], url_path=r'links/(?P<link_id>\\d+)', 
             permission_classes=[permissions.IsAuthenticated])
     def delete_link(self, request, pk=None, link_id=None):
         experience = self.get_object()

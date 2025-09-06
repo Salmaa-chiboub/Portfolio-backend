@@ -63,6 +63,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # CORS middleware must be placed as high as possible (before CommonMiddleware)
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -70,7 +72,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'axes.middleware.AxesMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'portfolio.urls'
@@ -247,6 +248,13 @@ else:
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "cache-control",
 ]
+
+# Allow cookies/credentials if the frontend requires authenticated requests
+CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default=True, cast=bool)
+
+# Helpful for dynamic or multiple frontends in production: you can set
+# CORS_ALLOWED_ORIGINS as an env variable comma-separated (already supported above).
+# Example (Railway): set CORS_ALLOWED_ORIGINS=https://salmachiboub.netlify.app
 
 # Security hardening - enable/override via environment variables in production
 # Redirect all HTTP requests to HTTPS

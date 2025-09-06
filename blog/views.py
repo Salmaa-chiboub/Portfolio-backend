@@ -46,7 +46,7 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['put', 'patch'], url_path='images/(?P<image_id>\d+)', 
+    @action(detail=True, methods=['put', 'patch'], url_path=r'images/(?P<image_id>\\d+)', 
             permission_classes=[IsSuperUser])
     def update_image(self, request, slug=None, image_id=None):
         post = self.get_object()
@@ -57,7 +57,7 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['delete'], url_path='images/(?P<image_id>\d+)', permission_classes=[IsSuperUser])
+    @action(detail=True, methods=['delete'], url_path=r'images/(?P<image_id>\\d+)', permission_classes=[IsSuperUser])
     def delete_image(self, request, slug=None, image_id=None):
         post = self.get_object()
         image = get_object_or_404(Image, id=image_id, post=post)
@@ -91,7 +91,7 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['put', 'patch'], url_path='links/(?P<link_id>\d+)', 
+    @action(detail=True, methods=['put', 'patch'], url_path=r'links/(?P<link_id>\\d+)', 
             permission_classes=[IsSuperUser])
     def update_link(self, request, slug=None, link_id=None):
         post = self.get_object()
@@ -102,7 +102,7 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['delete'], url_path='links/(?P<link_id>\d+)', permission_classes=[IsSuperUser])
+    @action(detail=True, methods=['delete'], url_path=r'links/(?P<link_id>\\d+)', permission_classes=[IsSuperUser])
     def delete_link(self, request, slug=None, link_id=None):
         post = self.get_object()
         link = get_object_or_404(Link, id=link_id, post=post)
