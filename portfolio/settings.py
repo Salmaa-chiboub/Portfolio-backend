@@ -74,17 +74,22 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'portfolio.urls'
 
+# Templates configuration
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Dossier global pour les templates
+        'APP_DIRS': True,  # Cherche les templates dans les dossiers 'templates' des applications
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'staticfiles': 'django.templatetags.static',
+            },
         },
     },
 ]
@@ -120,14 +125,17 @@ SIMPLE_JWT = {
 }
 
 # Email configuration (read from .env)
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='webmaster@localhost')
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@votredomaine.com')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL  # Pour les erreurs d'administration
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='')
-EMAIL_PORT = config('EMAIL_PORT', default='')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+EMAIL_TIMEOUT = 30  # secondes
+EMAIL_SUBJECT_PREFIX = '[Portfolio] '  # Préfixe pour les sujets d'emails
 
 # If EMAIL_HOST is configured but EMAIL_BACKEND not explicitly set, use SMTP
 if not EMAIL_BACKEND and EMAIL_HOST:

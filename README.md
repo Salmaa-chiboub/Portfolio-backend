@@ -1,93 +1,146 @@
-Backend - Portfolio (Django)
-=================================
+# Backend Portfolio - API Django REST
 
-Résumé
-------
-Ce dossier contient la partie backend du portfolio : une API REST construite avec Django et Django REST Framework. Elle gère les ressources principales du portfolio (utilisateurs, projets, expériences, compétences, blog, etc.), la gestion des médias et l'authentification.
+## Aperçu
+Ce dépôt contient le backend d'un portfolio professionnel construit avec Django REST Framework. L'API fournit des points de terminaison pour gérer le contenu dynamique d'un portfolio en ligne, y compris les projets, les expériences professionnelles, les compétences et les articles de blog.
 
-Principales caractéristiques
-----------------------------
-- API RESTful avec DRF (ViewSets, Serializers, Routers)
-- Authentification token/session pour les opérations protégées
-- Pagination, recherche et filtrage pour les listes
-- Gestion des médias (images, CV, fichiers) en développement via MEDIA_ROOT
-- Architecture modulaire : apps séparées (core, users, projects, experiences, skills, blog...)
+## Fonctionnalités principales
 
-Stack technique
----------------
-- Python 3.x
-- Django
-- Django REST Framework
-- django-filter (filtrage des listes)
-- Pillow (gestion des images)
-- PostgreSQL ou SQLite (selon configuration)
+### Architecture & Structure
+- Architecture modulaire avec applications Django séparées
+- API RESTful avec Django REST Framework (DRF)
+- Gestion des médias avec Cloudinary
+- Base de données PostgreSQL prête pour la production
+- Configuration sécurisée avec variables d'environnement
 
-Installation locale (PowerShell)
--------------------------------
-# Création et activation d'un environnement virtuel
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+### Sécurité
+- Authentification JWT (JSON Web Tokens)
+- Protection CSRF et CORS configurée
+- Sécurité renforcée avec django-axes
+- Validation des entrées utilisateur
 
-# Installation des dépendances
-pip install -r requirements.txt
+### Gestion des médias
+- Stockage cloud avec Cloudinary
+- Gestion optimisée des images avec Pillow
+- Téléchargement sécurisé des fichiers
 
-# Copier le fichier d'exemple d'environnement et l'adapter
-copy .env.example .env
-# éditer .env pour renseigner SECRET_KEY, DATABASE_URL, etc.
+## Configuration requise
 
-Préparer la base de données et exécuter le serveur
--------------------------------------------------
-# Appliquer les migrations
-python manage.py migrate
+- Python 3.8+
+- PostgreSQL 12+
+- Compte Cloudinary (pour le stockage des médias)
 
-# Créer un super-utilisateur (si besoin)
-python manage.py createsuperuser
+## Installation
 
-# Lancer le serveur de développement
-python manage.py runserver
+1. **Cloner le dépôt**
+   ```bash
+   git clone [URL_DU_REPO]
+   cd Portfolio-backend
+   ```
 
-Configuration additionnelle
----------------------------
-- Assurez-vous que 'django_filters' est présent dans INSTALLED_APPS si vous utilisez django-filter.
-- Pour le support des images, installez Pillow : pip install Pillow
-- MEDIA_ROOT doit exister ou Django le créera automatiquement en développement.
+2. **Configurer l'environnement virtuel**
+   ```powershell
+   # Windows
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
 
-Endpoints API (exemples)
-------------------------
-Les routes sont exposées sous /api/ (selon portfolio/urls.py)
-- GET  /api/experiences/            : lister les expériences (publique)
-- GET  /api/experiences/{id}/       : récupérer une expérience (publique)
-- POST /api/experiences/            : créer une expérience (authentifié)
-- PUT/PATCH /api/experiences/{id}/  : modifier une expérience (authentifié)
-- DELETE /api/experiences/{id}/     : supprimer une expérience (authentifié)
-- DELETE /api/experiences/delete_all/: supprimer toutes les expériences (authentifié)
+3. **Installer les dépendances**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Authentification
-----------------
-Le backend supporte l'authentification pour les opérations de création/modification/suppression. Utilisez les méthodes configurées dans le projet (Token, JWT ou session). Exemple header :
-Authorization: Token <votre_token>
+4. **Configurer les variables d'environnement**
+   ```bash
+   cp .env.example .env
+   # Éditer le fichier .env avec vos configurations
+   ```
 
-Tests
------
-- Les tests unitaires se trouvent dans chaque app (fichiers tests.py).
-- Lancer la suite de tests : python manage.py test
+5. **Configurer la base de données**
+   ```bash
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
 
-Bonnes pratiques
-----------------
-- Ne pas committer les secrets : utilisez .env et .gitignore
-- Versionner les migrations
-- Valider les uploads média (taille/type) dans les validators des modèles si nécessaire
+6. **Lancer le serveur de développement**
+   ```bash
+   python manage.py runserver
+   ```
 
-Contribuer
-----------
-- Ouvrir une branche dédiée pour votre feature/fix
-- Ajouter ou mettre à jour les tests
-- Proposer une Pull Request décrivant le changement
+## Points de terminaison API
 
-Licence
--------
-Référez-vous au fichier LICENSE à la racine du projet (le cas échéant).
+### Authentification
+- `POST /api/token/` - Obtenir un token JWT
+- `POST /api/token/refresh/` - Rafraîchir un token JWT
 
-Contact
--------
-Pour toute question sur le backend, ouvrir une issue dans le dépôt ou contacter le mainteneur du projet.
+### Applications principales
+
+#### Blog (`/api/blog/`)
+- Gestion des articles de blog
+- Commentaires et catégories
+- Médias associés
+
+#### Compétences (`/api/skills/`)
+- Gestion des compétences techniques
+- Catégorisation par domaine
+- Niveaux de maîtrise
+
+#### Projets (`/api/projects/`)
+- Portfolio des projets
+- Détails techniques et démonstrations
+- Liens vers les dépôts et démos
+
+#### Expériences (`/api/experiences/`)
+- Parcours professionnel
+- Réalisations et responsabilités
+- Références et preuves
+
+## Variables d'environnement
+
+Créez un fichier `.env` à la racine avec les variables suivantes :
+
+```
+SECRET_KEY=votre_secret_key
+DEBUG=True
+DATABASE_URL=postgres://user:password@localhost:5432/portfolio
+django_cloudinary_url=cloudinary://key:secret@cloud_name
+```
+
+## Tests
+
+```bash
+# Lancer tous les tests
+python manage.py test
+
+# Lancer les tests d'une application spécifique
+python manage.py test blog
+```
+
+## Déploiement
+
+### Prérequis
+- Compte sur un service de déploiement (Heroku, Railway, etc.)
+- Base de données PostgreSQL en production
+- Configuration Cloudinary pour les médias
+
+### Étapes de déploiement
+1. Configurer les variables d'environnement en production
+2. Désactiver le mode debug
+3. Configurer un nom de domaine et SSL
+4. Configurer un serveur WSGI (Gunicorn, uWSGI)
+5. Configurer un serveur web (Nginx, Apache)
+
+## Contribution
+
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/ma-nouvelle-fonctionnalite`)
+3. Commiter les changements (`git commit -am 'Ajouter une fonctionnalité'`)
+4. Pousser vers la branche (`git push origin feature/ma-nouvelle-fonctionnalite`)
+5. Ouvrir une Pull Request
+
+## Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+
+## Contact
+
+Pour toute question ou suggestion, veuillez ouvrir une issue sur le dépôt ou contacter le mainteneur du projet.
