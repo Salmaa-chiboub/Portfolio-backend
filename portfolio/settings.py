@@ -201,6 +201,25 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # pour collectstatic en pro
 
 MEDIA_URL = '/media/'
 
+# Increase upload size limits to allow large multipart requests (multiple images, long content).
+# Tunable: adjust as needed in production. This helps prevent 502s caused by large request bodies
+# being held in memory or being rejected by default Django limits.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB
+# Prefer streaming large uploads to disk first to avoid memory pressure.
+FILE_UPLOAD_HANDLERS = [
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
+    'django.core.files.uploadhandler.MemoryFileUploadHandler',
+]
+
+# Ensure DRF parsers include multipart/form-data for file uploads. Use setdefault to avoid
+# overwriting any existing user configuration earlier in the file.
+REST_FRAMEWORK.setdefault('DEFAULT_PARSER_CLASSES', [
+    'rest_framework.parsers.JSONParser',
+    'rest_framework.parsers.FormParser',
+    'rest_framework.parsers.MultiPartParser',
+])
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
