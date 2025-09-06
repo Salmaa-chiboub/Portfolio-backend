@@ -1,4 +1,5 @@
 import re
+import os
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password, get_password_validators
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -82,7 +83,11 @@ class ForgotPasswordSerializer(serializers.Serializer):
             
         token = PasswordResetTokenGenerator().make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
-        reset_link = f"{request.scheme}://{request.get_host()}/reset-password/{uid}/{token}/"
+        base_url = getattr(settings, 'FRONTEND_URL', None) or os.environ.get('FRONTEND_URL')
+        if not base_url:
+            raise ValidationError("FRONTEND_URL n'est pas configurée")
+        base_url = base_url.rstrip('/')
+        reset_link = f"{base_url}/reset-password/{uid}/{token}/"
 
         # Préparation de l'email en HTML
         subject = "Réinitialisation de votre mot de passe"
@@ -166,6 +171,46 @@ class SetNewPasswordSerializer(serializers.Serializer):
         user = self.validated_data['user']
         user.set_password(password)
         user.save()
+
+        # Envoyer un email de confirmation de réinitialisation au frontend
+        base_url = getattr(settings, 'FRONTEND_URL', None) or os.environ.get('FRONTEND_URL')
+        if not base_url:
+            # Ne pas échouer la réinitialisation si la variable n'est pas configurée, mais logguer
+            try:
+                print("FRONTEND_URL n'est pas configurée — impossible d'envoyer l'email de confirmation")
+            except Exception:
+                pass
+            return user
+
+        base_url = base_url.rstrip('/')
+        login_link = f"{base_url}/login/"
+
+        subject = "Votre mot de passe a été réinitialisé"
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+
+        html_content = render_to_string('emails/password_reset_confirmation.html', {
+            'login_link': login_link,
+            'user': user
+        })
+
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body="Veuillez activer le HTML pour voir ce message.",
+            from_email=from_email,
+            to=[user.email],
+            reply_to=[from_email]
+        )
+        msg.attach_alternative(html_content, "text/html")
+
+        try:
+            msg.send(fail_silently=False)
+        except Exception as e:
+            # Log l'erreur mais ne pas bloquer la réinitialisation
+            try:
+                print(f"Erreur d'envoi d'email de confirmation: {str(e)}")
+            except Exception:
+                pass
+
         return user
 
 
