@@ -119,8 +119,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         return value
 
     def validate_description(self, value):
-        if len(value) > 2000:
-            raise serializers.ValidationError("Description cannot exceed 2000 characters.")
+        if len(value) > 10000:
+            raise serializers.ValidationError("La description ne peut pas dépasser 10 000 caractères.")
         return value
 
 
