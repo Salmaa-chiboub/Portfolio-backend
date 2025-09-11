@@ -81,9 +81,11 @@ class ProjectSerializer(serializers.ModelSerializer):
     media_files = serializers.ListField(
         child=serializers.ImageField(), write_only=True, required=False
     )
-    # skills envoyés comme IDs en écriture
+    # Handle skills sent as multiple fields with the same name
     skills = serializers.ListField(
-        child=serializers.IntegerField(), write_only=True, required=False
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False
     )
     # skills affichés en lecture avec nom + icon
     skills_list = ProjectSkillRefSerializer(source="projectskillref_set", many=True, read_only=True)
@@ -124,41 +126,47 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def validate_skills(self, value):
         """
-        Vérifie que chaque ID existe et supprime les doublons.
-        Accepts JSON string (from multipart/form-data) or list/tuple.
+        Handle skills sent as:
+        - List of integers: [1, 2, 3]
+        - Comma-separated string: "1,2,3"
+        - Multiple fields with same name: skills=1&skills=2
         """
-        if isinstance(value, str):
-            try:
-                parsed = json.loads(value)
-            except Exception:
-                # also accept comma separated
-                parsed = [s.strip() for s in value.split(',') if s.strip()]
-            value = parsed
-
+        # If it's already a list, use it as is
         if not isinstance(value, (list, tuple)):
-            raise serializers.ValidationError("Skills must be a list of IDs.")
+            # If it's a string, try to parse as JSON or comma-separated
+            if isinstance(value, str):
+                try:
+                    value = json.loads(value)
+                except (json.JSONDecodeError, TypeError):
+                    value = [s.strip() for s in value.split(',') if s.strip()]
+            # If it's a single value, convert to list
+            else:
+                value = [value]
 
-        if len(value) > 20:
-            raise serializers.ValidationError("You can attach at most 20 skills per project.")
-
-        unique_ids = set()
-        missing = []
+        # Convert all values to integers
+        skill_ids = []
         for skill_id in value:
             try:
-                sid = int(skill_id)
-            except Exception:
-                raise serializers.ValidationError(f"Invalid skill id: {skill_id}")
-            if sid in unique_ids:
-                continue
-            unique_ids.add(sid)
-            if not SkillReference.objects.filter(id=sid).exists():
-                missing.append(sid)
+                skill_ids.append(int(skill_id))
+            except (ValueError, TypeError):
+                raise serializers.ValidationError(f"Invalid skill ID: {skill_id}")
 
-        if missing:
+        # Check for duplicates
+        if len(skill_ids) != len(set(skill_ids)):
+            raise serializers.ValidationError("Duplicate skill IDs are not allowed")
+
+        # Check if all skills exist
+        existing_skills = set(SkillReference.objects.filter(
+            id__in=skill_ids
+        ).values_list('id', flat=True))
+        
+        missing_skills = [sid for sid in skill_ids if sid not in existing_skills]
+        if missing_skills:
             raise serializers.ValidationError(
-                f"SkillReference IDs not found: {', '.join(map(str, missing))}"
+                f"The following skill IDs do not exist: {', '.join(map(str, missing_skills))}"
             )
-        return list(unique_ids)
+            
+        return skill_ids
 
     def validate_media_files(self, value):
         """
