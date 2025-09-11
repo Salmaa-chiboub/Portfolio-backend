@@ -96,15 +96,25 @@ class PostSerializer(serializers.ModelSerializer):
         """Ensure blog title is unique (case-insensitive). Return validation error with useful message."""
         title = (value or "").strip()
         if not title:
-            raise serializers.ValidationError("Title is required.")
+            raise serializers.ValidationError("Le titre est requis.")
+        if len(title) > 200:
+            raise serializers.ValidationError("Le titre ne peut pas dépasser 200 caractères.")
         qs = Post.objects.filter(title__iexact=title)
         # exclude current instance when updating
         instance = getattr(self, 'instance', None)
         if instance is not None:
             qs = qs.exclude(pk=instance.pk)
         if qs.exists():
-            raise serializers.ValidationError("A blog post with this title already exists.")
+            raise serializers.ValidationError("Un article avec ce titre existe déjà.")
         return title
+        
+    def validate_content(self, value):
+        """Validate blog post content length."""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Le contenu de l'article est requis.")
+        if len(value) > 10000:
+            raise serializers.ValidationError("Le contenu ne peut pas dépasser 10 000 caractères.")
+        return value
 
     def update(self, instance, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', None)
