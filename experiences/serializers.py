@@ -1,3 +1,5 @@
+import json
+from django.db import transaction
 from rest_framework import serializers
 from .models import Experience, ExperienceSkillRef, ExperienceLink
 
@@ -98,10 +100,10 @@ class ExperienceSerializer(serializers.ModelSerializer):
                         skill_reference_id=skill_item['value']
                     )
                 else:
-                    # New skill - create SkillReference first
-                    skill_ref = SkillReference.objects.create(
+                    # New skill reference
+                    skill_ref, created = SkillReference.objects.get_or_create(
                         name=skill_item['value'],
-                        icon=''  # You might want to handle this differently
+                        defaults={'icon': ''}
                     )
                     ExperienceSkillRef.objects.create(
                         experience=experience,
@@ -109,9 +111,10 @@ class ExperienceSerializer(serializers.ModelSerializer):
                     )
             
             # Create links
-            for link_data in links_data:
-                ExperienceLink.objects.create(experience=experience, **link_data)
-                
+            if links_data:
+                for link_data in links_data:
+                    ExperienceLink.objects.create(experience=experience, **link_data)
+            
             return experience
         
     def update(self, instance, validated_data):
