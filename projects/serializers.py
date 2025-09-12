@@ -127,10 +127,14 @@ class ProjectSerializer(serializers.ModelSerializer):
     def validate_skills(self, value):
         """
         Handle skills sent as:
-        - List of integers: [1, 2, 3]
-        - Comma-separated string: "1,2,3"
-        - Multiple fields with same name: skills=1&skills=2
+        - List of integers: [1, 2, 3] (existing skill IDs)
+        - List of strings: ["React", "Python"] (new skill names)
+        - Mixed list: [1, "New Skill"]
+        - Comma-separated string: "1,2,3" or "React,Python"
+        - Multiple fields with same name: skills=1&skills=React
         """
+        from skills.models import SkillReference
+        
         # If it's already a list, use it as is
         if not isinstance(value, (list, tuple)):
             # If it's a string, try to parse as JSON or comma-separated
@@ -143,30 +147,39 @@ class ProjectSerializer(serializers.ModelSerializer):
             else:
                 value = [value]
 
-        # Convert all values to integers
-        skill_ids = []
-        for skill_id in value:
-            try:
-                skill_ids.append(int(skill_id))
-            except (ValueError, TypeError):
-                raise serializers.ValidationError(f"Invalid skill ID: {skill_id}")
+        # Process each skill (could be ID or name)
+        skill_data = []
+        for item in value:
+            if isinstance(item, (int, str)) and str(item).isdigit():
+                # It's a skill ID
+                skill_data.append({'type': 'id', 'value': int(item)})
+            elif isinstance(item, str):
+                # It's a new skill name
+                if not item.strip():
+                    continue
+                skill_data.append({'type': 'name', 'value': item.strip()})
+            else:
+                raise serializers.ValidationError(f"Invalid skill format: {item}")
 
-        # Check for duplicates
-        if len(skill_ids) != len(set(skill_ids)):
-            raise serializers.ValidationError("Duplicate skill IDs are not allowed")
+        # Check for duplicate skill names (case-insensitive)
+        skill_names = [s['value'].lower() for s in skill_data if s['type'] == 'name']
+        if len(skill_names) != len(set(skill_names)):
+            raise serializers.ValidationError("Duplicate skill names are not allowed")
 
-        # Check if all skills exist
-        existing_skills = set(SkillReference.objects.filter(
-            id__in=skill_ids
-        ).values_list('id', flat=True))
-        
-        missing_skills = [sid for sid in skill_ids if sid not in existing_skills]
-        if missing_skills:
-            raise serializers.ValidationError(
-                f"The following skill IDs do not exist: {', '.join(map(str, missing_skills))}"
-            )
+        # Check if all skill IDs exist
+        skill_ids = [s['value'] for s in skill_data if s['type'] == 'id']
+        if skill_ids:
+            existing_skills = set(SkillReference.objects.filter(
+                id__in=skill_ids
+            ).values_list('id', flat=True))
             
-        return skill_ids
+            missing_skills = [sid for sid in skill_ids if sid not in existing_skills]
+            if missing_skills:
+                raise serializers.ValidationError(
+                    f"The following skill IDs do not exist: {', '.join(map(str, missing_skills))}"
+                )
+            
+        return skill_data
 
     def validate_media_files(self, value):
         """
@@ -221,6 +234,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         return [sr.name for sr in obj.skills.all()]
 
     def create(self, validated_data):
+        from skills.models import SkillReference
+        
         media_files = validated_data.pop("media_files", [])
         skills_data = validated_data.pop("skills", [])
         links_data = validated_data.pop("links_data", [])
@@ -231,10 +246,25 @@ class ProjectSerializer(serializers.ModelSerializer):
             # Handle media files
             for media_file in media_files:
                 ProjectMedia.objects.create(project=project, image=media_file)
-                
+            
             # Handle skills
-            for skill_id in skills_data:
-                ProjectSkillRef.objects.create(project=project, skill_reference_id=skill_id)
+            for skill_item in skills_data:
+                if skill_item['type'] == 'id':
+                    # Existing skill reference
+                    ProjectSkillRef.objects.create(
+                        project=project, 
+                        skill_reference_id=skill_item['value']
+                    )
+                else:
+                    # New skill - create SkillReference first
+                    skill_ref = SkillReference.objects.create(
+                        name=skill_item['value'],
+                        icon=''  # You might want to handle this differently
+                    )
+                    ProjectSkillRef.objects.create(
+                        project=project,
+                        skill_reference=skill_ref
+                    )
             
             # Handle links
             for link_data in links_data:
@@ -261,11 +291,29 @@ class ProjectSerializer(serializers.ModelSerializer):
         
         # Handle skills if provided
         if skills_data is not None:
+            from skills.models import SkillReference
+            
             # Clear existing skills
             instance.skills.clear()
+            
             # Add new skills
-            for skill_id in skills_data:
-                ProjectSkillRef.objects.create(project=instance, skill_reference_id=skill_id)
+            for skill_item in skills_data:
+                if skill_item['type'] == 'id':
+                    # Existing skill reference
+                    ProjectSkillRef.objects.create(
+                        project=instance,
+                        skill_reference_id=skill_item['value']
+                    )
+                else:
+                    # New skill - create SkillReference first
+                    skill_ref = SkillReference.objects.create(
+                        name=skill_item['value'],
+                        icon=''  # You might want to handle this differently
+                    )
+                    ProjectSkillRef.objects.create(
+                        project=instance,
+                        skill_reference=skill_ref
+                    )
         
         # Handle links if provided
         if links_data is not None:
