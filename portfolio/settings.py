@@ -104,9 +104,9 @@ WSGI_APPLICATION = 'portfolio.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=config("DATABASE_URL"),
-        conn_max_age=600,  # Connection pooling - keep connections alive for 10 minutes
-        conn_health_checks=True,  # Enable connection health checks
+        default=config('DATABASE_URL', default='sqlite:///db.sqlite3'),
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
 
@@ -279,10 +279,14 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-# When behind a proxy (Heroku, Railway, etc.), ensure Django knows requests are secure
+# Security settings for production
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# Note: You can toggle the above behavior via environment variables in production
+SECURE_SSL_REDIRECT = config('FORCE_SSL', default=not DEBUG, cast=bool)
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=not DEBUG, cast=bool)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=not DEBUG, cast=bool)
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
 
 FRONTEND_URL=config("FRONTEND_URL", default="http://127.0.0.1:8080").rstrip("/")
